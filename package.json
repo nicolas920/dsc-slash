@@ -1,6 +1,6 @@
 {
   "name": "dsc-slash",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A discord.js slash command module",
   "main": "src/index.js",
   "repository": {
