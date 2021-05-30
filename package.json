@@ -1,0 +1,19 @@
+{
+  "name": "dsc-slash",
+  "version": "1.0.0",
+  "description": "A discord.js slash command module",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dluxe4444/dsc-slash.git"
+  },
+  "author": "dluxe4444 <coolgamer3dplays@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dluxe4444/dsc-slash/issues"
+  },
+  "homepage": "https://github.com/dluxe4444/dsc-slash#readme",
+  "dependencies": {
+    "discord.js": "^12.5.3"
+  }
+}
