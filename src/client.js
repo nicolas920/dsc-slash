@@ -55,6 +55,7 @@ class Client {
         const client = this.client;
         const clientID = this.clientID;
         const guild = await client.guilds.fetch(interaction.guild_id)
+        let sentReply = false
         const result = {
             id: interaction.id,
             token: interaction.token,
@@ -67,13 +68,29 @@ class Client {
             options: interaction.data.options,
             async reply(cont, ephermal = false) {
                 const content = await createMessage(client, cont, ephermal, interaction)
-                const res = await client.api.interactions(interaction.id, interaction.token).callback.post(content)
-                return res;
+                const replyRequest = !sentReply
+                ? client.api.interactions(interaction.id, interaction.token).callback.post(content)
+                : client.api.webhooks(clientID, interaction.token).post(content.data);
+                if(!sentReply) sentReply = true
+                return replyRequest
             },
             async followup(cont) {
                 const whc = new WebhookClient(clientID, interaction.token)
                 const res = await whc.send(cont)
                 return res;
+            },
+            async thinking(ephermal = false) {
+                if(sentReply) return;
+                sentReply = true
+                await client.api.interactions(interaction.id, interaction.token).callback.post({
+                    data: {
+                        type: 5,
+                        data: {
+                            content: '',
+                            flags: ephermal ? 64 : null
+                        }
+                    }
+                })
             }
         }
         return result;
