@@ -69,9 +69,9 @@ class Client {
             async reply(cont, ephermal = false) {
                 const content = await createMessage(client, cont, ephermal, interaction)
                 const replyRequest = !sentReply
-                ? client.api.interactions(interaction.id, interaction.token).callback.post(content)
-                : client.api.webhooks(clientID, interaction.token).post(content.data);
-                if(!sentReply) sentReply = true
+                    ? client.api.interactions(interaction.id, interaction.token).callback.post(content)
+                    : client.api.webhooks(clientID, interaction.token).post(content.data);
+                if (!sentReply) sentReply = true
                 return replyRequest
             },
             async followup(cont) {
@@ -80,7 +80,7 @@ class Client {
                 return res;
             },
             async thinking(ephermal = false) {
-                if(sentReply) return;
+                if (sentReply) return;
                 sentReply = true
                 await client.api.interactions(interaction.id, interaction.token).callback.post({
                     data: {
@@ -127,14 +127,14 @@ class Client {
         }
         return commands;
     }
-    async updateCommand(commandID, guildID, newCmd) {
+    async updateCommand(commandID, newCmd, guildID) {
         if (typeof commandID != "string") throw new TypeError("Invalid command ID.")
-        if(typeof newCmd != 'object') throw new TypeError("Invalid command")
+        if (typeof newCmd != 'object') throw new TypeError("Invalid command")
         if (!guildID) {
-            this.client.api.applications(this.clientID).commands(commandID).patch(newCmd)
+            this.client.api.applications(this.clientID).commands(commandID).patch({ data: newCmd })
         } else {
             if (typeof guildID != "string") throw new TypeError("Invalid guild ID.")
-            this.client.api.applications(this.clientID).guilds(guildID).commands(commandID).patch(newCmd)
+            this.client.api.applications(this.clientID).guilds(guildID).commands(commandID).patch({ data: newCmd })
         }
     }
     async findCommand(toFind, commands) {
