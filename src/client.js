@@ -1,49 +1,5 @@
-const { APIMessage, SnowflakeUtil, WebhookClient } = require("discord.js")
-async function createMessage(client, content, ephermal = false, interaction) {
-    let cont;
-    if (typeof content == "object") {
-        const apiMessage = await APIMessage.create(client.channels.resolve(interaction.channel_id), content)
-            .resolveData()
-            .resolveFiles()
-        if (ephermal) {
-            cont = {
-                data: {
-                    type: 4,
-                    data: { ...apiMessage.data, files: apiMessage.files, flags: 64 }
-                }
-            }
-        } else {
-            cont = {
-                data: {
-                    type: 4,
-                    data: { ...apiMessage.data, files: apiMessage.files }
-                }
-            }
-        }
-    } else {
-        if (ephermal) {
-            cont = {
-                data: {
-                    type: 4,
-                    data: {
-                        content: content,
-                        flags: 64
-                    }
-                }
-            }
-        } else {
-            cont = {
-                data: {
-                    type: 4,
-                    data: {
-                        content: content
-                    }
-                }
-            }
-        }
-    }
-    return cont;
-}
+const { SnowflakeUtil, WebhookClient } = require("discord.js")
+const createMessage = require("./createMessage")
 class Client {
     constructor(client, id) {
         if (typeof client != "object") throw new TypeError("Client is invalid")
@@ -59,6 +15,7 @@ class Client {
         const result = {
             id: interaction.id,
             token: interaction.token,
+            client: client,
             channel: client.channels.cache.get(interaction.channel_id),
             guild: guild,
             member: await guild.members.fetch(interaction.member.user.id),
@@ -66,8 +23,8 @@ class Client {
             name: interaction.data.name,
             createdTimestamp: SnowflakeUtil.deconstruct(interaction.id).timestamp,
             options: interaction.data.options,
-            async reply(cont, ephermal = false) {
-                const content = await createMessage(client, cont, ephermal, interaction)
+            async reply(cont, options = { ephermal: true, components: [] }) {
+                const content = await createMessage(client, cont, interaction, options)
                 const replyRequest = !sentReply
                     ? client.api.interactions(interaction.id, interaction.token).callback.post(content)
                     : client.api.webhooks(clientID, interaction.token).post(content.data);
@@ -75,14 +32,16 @@ class Client {
                 return replyRequest
             },
             async followup(cont) {
+                if (!sentReply) throw new Error("The interaction was not replied to.")
+                if (typeof cont != "string") throw new TypeError("Content must be a string")
                 const whc = new WebhookClient(clientID, interaction.token)
                 const res = await whc.send(cont)
                 return res;
             },
-            async thinking(ephermal = false) {
+            thinking(ephermal = false) {
                 if (sentReply) return;
                 sentReply = true
-                await client.api.interactions(interaction.id, interaction.token).callback.post({
+                client.api.interactions(interaction.id, interaction.token).callback.post({
                     data: {
                         type: 5,
                         data: {
@@ -91,7 +50,18 @@ class Client {
                         }
                     }
                 })
-            }
+            },
+            delete(messageId = '@original') {
+                client.api.webhooks(clientID, interaction.token).messages(messageId).delete();
+            },
+            async edit(cont, messageId = '@original', options) {
+                const content = await createMessage(client, cont, interaction, options);
+                if (!cont) {
+                    throw new Error('No content');
+                }
+                const res = await client.api.webhooks(clientID, interaction.token).messages(messageId).patch(content.data)
+                return res;
+            },
         }
         return result;
     }
@@ -106,16 +76,14 @@ class Client {
         }
         return result;
     }
-    async deleteCommand(commandID, guildID) {
+    deleteCommand(commandID, guildID) {
         if (typeof commandID != "string") throw new TypeError("Invalid command ID.")
-        let result;
         if (!guildID) {
-            result = await this.client.api.applications(this.clientID).commands(commandID).delete()
+            this.client.api.applications(this.clientID).commands(commandID).delete()
         } else {
             if (typeof guildID != "string") throw new TypeError("Invalid guild ID!")
-            result = await this.client.api.applications(this.clientID).guilds(guildID).commands(commandID).delete()
+            this.client.api.applications(this.clientID).guilds(guildID).commands(commandID).delete()
         }
-        return result;
     }
     async getCommands(guildID) {
         let commands;
@@ -130,17 +98,26 @@ class Client {
     async updateCommand(commandID, newCmd, guildID) {
         if (typeof commandID != "string") throw new TypeError("Invalid command ID.")
         if (typeof newCmd != 'object') throw new TypeError("Invalid command")
+        let cmd;
         if (!guildID) {
-            this.client.api.applications(this.clientID).commands(commandID).patch({ data: newCmd })
+            cmd = await this.client.api.applications(this.clientID).commands(commandID).patch({ data: newCmd })
         } else {
             if (typeof guildID != "string") throw new TypeError("Invalid guild ID.")
-            this.client.api.applications(this.clientID).guilds(guildID).commands(commandID).patch({ data: newCmd })
+            cmd = await this.client.api.applications(this.clientID).guilds(guildID).commands(commandID).patch({ data: newCmd })
         }
+        return cmd;
     }
-    async findCommand(toFind, commands) {
-        for (var i = 0; i < commands.length; i++) {
-            if (commands[i].name === toFind) {
-                return commands[i];
+    async findCommand(toFind, guildID) {
+        let cmds;
+        if (!guildID) {
+            cmds = await this.getCommands()
+        } else {
+            if (typeof guildId != "string") throw new TypeError("Invalid guild ID.")
+            cmds = await this.getCommands(guildID)
+        }
+        for (var i = 0; i < cmds.length; i++) {
+            if (cmds[i].name === toFind) {
+                return cmds[i];
             }
         }
     }
