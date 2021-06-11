@@ -32,8 +32,8 @@ class Client {
                 return replyRequest
             },
             async followup(cont) {
-                if(!sentReply) throw new Error("The interaction was not replied to.")
-                if(typeof cont != "string") throw new TypeError("Content must be a string")
+                if (!sentReply) throw new Error("The interaction was not replied to.")
+                if (typeof cont != "string") throw new TypeError("Content must be a string")
                 const whc = new WebhookClient(clientID, interaction.token)
                 const res = await whc.send(cont)
                 return res;
@@ -59,7 +59,7 @@ class Client {
                 if (!cont) {
                     throw new Error('No content');
                 }
-                const res = await client.api.webhooks(client.user.id, interaction.token).messages(messageId).patch(content.data)
+                const res = await client.api.webhooks(clientID, interaction.token).messages(messageId).patch(content.data)
                 return res;
             },
         }
