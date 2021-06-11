@@ -54,8 +54,8 @@ class Client {
             delete(messageId = '@original') {
                 client.api.webhooks(clientID, interaction.token).messages(messageId).delete();
             },
-            async edit(cont, messageId = '@original') {
-                const content = await createMessage(client, cont, interaction);
+            async edit(cont, messageId = '@original', options) {
+                const content = await createMessage(client, cont, interaction, options);
                 if (!input) {
                     throw new Error('No content');
                 }
