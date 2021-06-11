@@ -56,7 +56,7 @@ class Client {
             },
             async edit(cont, messageId = '@original', options) {
                 const content = await createMessage(client, cont, interaction, options);
-                if (!input) {
+                if (!cont) {
                     throw new Error('No content');
                 }
                 const res = await client.api.webhooks(client.user.id, interaction.token).messages(messageId).patch(content.data)
