@@ -19,8 +19,12 @@ client.on("ready", async () => {
     console.log(cmd)
     client.ws.on("INTERACTION_CREATE", async interaction => {
         const inter = await int.parseCommand(interaction)
-        if(inter.name == "ping") return inter.reply("Pong!", true) // The true at the end makes it ephermal, you can remove it if you want it to be public. You can even pass in an embed!
+        if(inter.name == "ping") return inter.reply("Pong!", { ephermal: true }) // You can leave the ephermal out if you don't want it.
     })
 })
 client.login("TOKEN")
 ```
+## Support
+Not sure how to use Discord Slash? Here are some resources:
+[Discord Slash Documentation](https://slash.dluxe.ml)
+[Support Server](https://discord.gg/hqwZ5CpuVz)
