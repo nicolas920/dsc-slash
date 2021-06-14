@@ -23,7 +23,7 @@ class Client {
             name: interaction.data.name,
             createdTimestamp: SnowflakeUtil.deconstruct(interaction.id).timestamp,
             options: interaction.data.options,
-            async reply(cont, options = { ephermal: true, components: [] }) {
+            async reply(cont, options = { ephermal: false, components: [] }) {
                 const content = await createMessage(client, cont, interaction, options)
                 const replyRequest = !sentReply
                     ? client.api.interactions(interaction.id, interaction.token).callback.post(content)
@@ -112,7 +112,7 @@ class Client {
         if (!guildID) {
             cmds = await this.getCommands()
         } else {
-            if (typeof guildId != "string") throw new TypeError("Invalid guild ID.")
+            if (typeof guildID != "string") throw new TypeError("Invalid guild ID.")
             cmds = await this.getCommands(guildID)
         }
         for (var i = 0; i < cmds.length; i++) {
